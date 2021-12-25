@@ -127,11 +127,10 @@ def decode_extract_and_batch(
       normalize=decode_normalize,
       fast_wav=decode_fast_wav)
 
-    audio = tf.py_func(
+    audio = tf.numpy_function(
         _decode_audio_closure,
         [fp],
-        tf.float32,
-        stateful=False)
+        tf.float32)
     audio.set_shape([None, 1, decode_num_channels])
 
     return audio
@@ -156,7 +155,7 @@ def decode_extract_and_batch(
       audio = audio[start:]
 
     # Extract sliceuences
-    audio_slices = tf.contrib.signal.frame(
+    audio_slices = tf.signal.frame(
         audio,
         slice_len,
         slice_hop,

@@ -235,17 +235,18 @@ def train(fps, args):
     z = graph.get_tensor_by_name('G_z:0')
     _G_z = sess.run(graph.get_tensor_by_name('G_z:0'), {z: _z})
 """
-def infer(args):
+def infer(args, z):
   infer_dir = os.path.join(args.train_dir, 'infer')
   if not os.path.isdir(infer_dir):
     os.makedirs(infer_dir)
 
   # Subgraph that generates latent vectors
-  samp_z_n = tf.placeholder(tf.int32, [], name='samp_z_n')
+  #samp_z_n = tf.placeholder(tf.int32, [], name='samp_z_n')
+  samp_z_n = args.incept_n
   samp_z = tf.random_uniform([samp_z_n, args.wavegan_latent_dim], -1.0, 1.0, dtype=tf.float32, name='samp_z')
 
   # Input zo
-  z = tf.placeholder(tf.float32, [None, args.wavegan_latent_dim], name='z')
+  #z = tf.placeholder(tf.float32, [None, args.wavegan_latent_dim], name='z')
   flat_pad = tf.placeholder(tf.int32, [], name='flat_pad')
 
   # Execute generator
@@ -650,7 +651,7 @@ if __name__ == '__main__':
     if len(fps) == 0:
       raise Exception('Did not find any audio files in specified directory')
     print('Found {} audio files in specified directory'.format(len(fps)))
-    infer(args)
+    #infer(args)
     train(fps, args)
   elif args.mode == 'preview':
     preview(args)
