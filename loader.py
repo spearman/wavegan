@@ -192,6 +192,6 @@ def decode_extract_and_batch(
             '/device:GPU:{}'.format(prefetch_gpu_num)))
 
   # Get tensors
-  iterator = dataset.make_one_shot_iterator()
-  
+  iterator = iter (dataset)
+
   return iterator.get_next()
