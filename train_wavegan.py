@@ -38,8 +38,6 @@ def train(fps, args):
         shuffle_buffer_size=4096,
         prefetch_size=args.train_batch_size * 4,
         prefetch_gpu_num=args.data_prefetch_gpu_num)[:, :, 0]
-  #FIXME:debug
-  print ("x:", x)
   x = tf.keras.layers.Input(tensor=x)
 
   with tf.GradientTape (persistent=True) as tape:

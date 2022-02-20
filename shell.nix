@@ -3,7 +3,7 @@
 # $ pip install tensorflow-cpu python-language-server matplotlib
 # $ pip install scipy==1.0.0
 # $ pip install librosa==0.6.2
-# $ ./main.py
+# $ ./train.sh
 
 with import <nixpkgs> {};
 mkShell {

@@ -1,0 +1,52 @@
+# train_wavegan.py
+
+`main`
+
+- create argument parser and set default args
+- parse args
+- create train dir and save args to file
+- in train mode:
+    * get file paths from data dir
+    * call infer (args) -- creates and save a "MetaGraphDef" for
+      "simple inference"
+        + create a latent vector
+        + execute generator on input
+        + create a "saver" for generator variables and "global step tensor"
+        + write the default graph and export "meta graph"
+        + reset the default graph
+      FIXME: the creation of the latent vector is noted to be a "subgraph" and
+        doesn't seem to be related to the actual running of the generator on the
+        separate input vector
+    * call train (fps, args)
+        + load, decode, and batch files
+        + make a random latent vector
+        + run the generator on the latent vector
+        + print summary of generator variables
+        + perform some tensorboard summary operations
+        + run the discriminator on the first real sample
+        + print summary of discriminator variables
+        + run the discriminator on the generated sample
+        + compute generator and discriminator losses using method depending on
+          `args.wavegan_loss`, the default being `wgan-gp`
+        + create the optimizer corresponding to the loss method
+        + define training "op" applying the optimizers on the losses
+        + run the following training loop in the context of a
+          "`MonitoredTrainingSession`":
+            - for a number of `args.wavegan_disc_nupdates`, run the
+              discriminator training op
+            - run a single generator training op
+  FIXME: why is infer called before train? possibly so that the infer graph can
+  be called on the trained variables to generate samples?
+
+
+# TF2 GAN examples
+
+<https://www.tensorflow.org/tutorials/generative/dcgan>
+
+<https://towardsdatascience.com/demystifying-gans-in-tensorflow-2-0-9890834ab3d9?gi=87d6e608a7d6>
+
+<https://medium.com/aubergine-solutions/implementing-gan-using-tensorflow-2-0-9d03e29692cf>
+-- this looks pretty much identical to the tensorflow dcgan tutorial
+
+<https://github.com/thisisiron/TF2-GAN>
+-- TF2 GAN examples including WGAN and WGAN-GP

@@ -2,6 +2,7 @@ import tensorflow as tf
 
 class Generator (tf.keras.Model):
   def __init__ (self,
+    batch_size,
     slice_len=16384,
     nch=1,
     kernel_len=25,
@@ -20,7 +21,9 @@ class Generator (tf.keras.Model):
     self.dim_mul = dim_mul = 16 if slice_len == 16384 else 32
     # layers
     self.z_project = tf.keras.layers.Dense (4 * 4 * dim * dim_mul)
-    self.reshape_z = tf.keras.layers.Reshape ((None, 16, dim * dim_mul))
+    #self.reshape_z = tf.keras.layers.Reshape ((batch_size, 16, dim * dim_mul))
+    #self.reshape_z = tf.keras.layers.Reshape ((1, 16, dim * dim_mul))
+    self.reshape_z = tf.keras.layers.Reshape ((16, dim * dim_mul))
     if use_batchnorm:
       self.batchnorm_z = tf.keras.layers.BatchNormalization()
     self.relu_z = tf.keras.layers.ReLU()
@@ -80,12 +83,21 @@ class Generator (tf.keras.Model):
     # FC and reshape for convolution
     # [100] -> [16, 1024]
     output = z
+    #FIXME:debug
+    print ("Z", z.shape)
     output = self.z_project (output)   # dense
-    output = self.reshape_z (output, input_shape=[batch_size, 16, self.dim * dim_mul])
+    #FIXME:debug
+    print ("Z_PROJECT", output.shape)
+    output = self.reshape_z (output)
+    #FIXME:debug
+    print ("RESHAPED", output.shape)
+    #output = self.reshape_z (output, input_shape=[batch_size, 16, self.dim * dim_mul])
     if self.use_batchnorm:
       output = self.batchnorm_z(output, train)
     output = tf.nn.relu(output)
 
+    #FIXME:debug
+    print ("RESHAPED", output.shape)
     # Layer 0
     # [16, 1024] -> [64, 512]
     output = self.upconv_0 (output)
@@ -207,12 +219,15 @@ class Discriminator (tf.keras.Model):
 
   def call (self, x, train):
     batch_size = tf.shape(x)[0]
+    print ("X SHAPE:", x.shape)
     slice_len = int(x.get_shape()[1])
+    #FIXME:debug
+    print ("BATCH SZ:", batch_size)
+    print ("SLICE LEN:", slice_len)
+    print ("DISC SLICE LEN:", self.slice_len)
     assert self.slice_len == slice_len
 
     if self.phaseshuffle_rad > 0:
-      # TODO: phaseshuffle
-      assert False
       phaseshuffle = lambda x: apply_phaseshuffle(x, self.phaseshuffle_rad)
     else:
       phaseshuffle = lambda x: x
@@ -278,3 +293,67 @@ class Discriminator (tf.keras.Model):
     output = self.out (output)[:, 0]
 
     return output
+
+
+def discriminator_loss (args, discriminator, x, generated, real_output, generated_output):
+  # Create loss
+  D_clip_weights = None
+  if args.wavegan_loss == 'dcgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'lsgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'wgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'wgan-gp':
+    D_loss = tf.reduce_mean(generated_output) - tf.reduce_mean(real_output)
+
+    alpha = tf.random.uniform(shape=[args.train_batch_size, 1, 1], minval=0., maxval=1.)
+    differences = generated - x
+    interpolates = x + (alpha * differences)
+    D_interp = discriminator (interpolates, train=True)
+
+    LAMBDA = 10
+    gradients = tf.gradients(D_interp, interpolates)[0]
+    slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2]))
+    gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2.)
+    D_loss += LAMBDA * gradient_penalty
+  else:
+    raise NotImplementedError()
+
+  return D_loss
+
+def generator_loss (args, generated_output):
+  # Create loss
+  D_clip_weights = None
+  if args.wavegan_loss == 'dcgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'lsgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'wgan':
+    print ("UNIMPLEMENTED")
+    assert False
+  elif args.wavegan_loss == 'wgan-gp':
+    G_loss = -tf.reduce_mean(generated_output)
+  else:
+    raise NotImplementedError()
+
+  return G_loss
+
+def apply_phaseshuffle(x, rad, pad_type='reflect'):
+  b, x_len, nch = x.get_shape().as_list()
+
+  phase = tf.random.uniform([], minval=-rad, maxval=rad + 1, dtype=tf.int32)
+  pad_l = tf.maximum(phase, 0)
+  pad_r = tf.maximum(-phase, 0)
+  phase_start = pad_r
+  x = tf.pad(x, [[0, 0], [pad_l, pad_r], [0, 0]], mode=pad_type)
+
+  x = x[:, phase_start:phase_start+x_len]
+  x.set_shape([b, x_len, nch])
+
+  return x
