@@ -242,7 +242,7 @@ def infer(args, z):
 
   # Subgraph that generates latent vectors
   #samp_z_n = tf.placeholder(tf.int32, [], name='samp_z_n')
-  samp_z_n = args.incept_n
+  samp_z_n = args.preview_n
   samp_z = tf.random_uniform([samp_z_n, args.wavegan_latent_dim], -1.0, 1.0, dtype=tf.float32, name='samp_z')
 
   # Input zo
