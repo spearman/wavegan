@@ -21,7 +21,7 @@ def train(fps, args):
     slice_first_only=args.data_first_slice,
     slice_overlap_ratio=0. if args.data_first_slice else args.data_overlap_ratio,
     slice_pad_end=True if args.data_first_slice else args.data_pad_end,
-    repeat=True,
+    repeat=False,
     shuffle=True,
     shuffle_buffer_size=4096,
     prefetch_size=args.train_batch_size * 4,
@@ -148,6 +148,8 @@ if __name__ == '__main__':
   import argparse
   import glob
   import sys
+
+  print ("physical devices: ", tf.config.list_physical_devices())
 
   parser = argparse.ArgumentParser()
 
