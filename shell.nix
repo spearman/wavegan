@@ -11,10 +11,11 @@ mkShell {
     (python39.withPackages (p: with p; [
       pip
       #python-language-server  # doesn't work with python 3.9; install with pip
+      zlib
     ]))
   ];
   shellHook = ''
-    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH
     #alias pip="PIP_PREFIX='$(pwd)/_build/pip_packages' TMPDIR='$(pwd)' /pip"
     export PIP_PREFIX="$(pwd)/_build/pip_packages"
     export TMPDIR="$(pwd)"

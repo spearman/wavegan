@@ -120,6 +120,34 @@ def train(fps, args):
     G_opt.apply_gradients (zip (grad_gen, generator.trainable_variables))
     return gen_loss
 
+  def preview (step):
+    from scipy.io.wavfile import write as wavwrite
+
+    preview_dir = os.path.join (args.train_dir, "preview")
+    if not os.path.isdir (preview_dir):
+      os.makedirs (preview_dir)
+
+    noise = tf.random.normal ([args.preview_n, args.wavegan_latent_dim])
+    generated = generator (noise, train=False)
+    # TODO: pp_filt
+    # Flatten batch
+    flat_pad = int (args.data_sample_rate / 2)
+    generated_padded = tf.pad (generated, [[0, 0], [0, flat_pad], [0, 0]])
+    nch = int (generated.get_shape()[-1])
+    print ("NCH:", nch)
+    generated_flat = tf.reshape (generated_padded, [-1, nch])
+    # Encode to int16
+    def float_to_int16 (x):
+      x_int16 = x * 32767.0
+      x_int16 = tf.clip_by_value (x_int16, -32767.0, 32767.0)
+      x_int16 = tf.cast (x_int16, tf.int16)
+      return x_int16
+    generated_int16 = float_to_int16 (generated)
+    generated_flat_int16 = float_to_int16 (generated_flat)
+    preview_fp = os.path.join (preview_dir,
+      "{}.wav".format (str (step).zfill (8)))
+    wavwrite (preview_fp, args.data_sample_rate, generated_flat_int16)
+
   epoch = 0
   while True:
     start = time.time()
@@ -141,7 +169,8 @@ def train(fps, args):
 
     epoch += 1
 
-    #TODO: save audio sample
+    print ("Generating preview")
+    preview (epoch)
 
 
 if __name__ == '__main__':
