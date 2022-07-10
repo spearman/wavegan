@@ -129,7 +129,6 @@ def train(fps, args):
 
     noise = tf.random.normal ([args.preview_n, args.wavegan_latent_dim])
     generated = generator (noise, train=False)
-    # TODO: pp_filt
     # Flatten batch
     flat_pad = int (args.data_sample_rate / 2)
     generated_padded = tf.pad (generated, [[0, 0], [0, flat_pad], [0, 0]])
@@ -300,7 +299,9 @@ if __name__ == '__main__':
     'kernel_len': args.wavegan_kernel_len,
     'dim': args.wavegan_dim,
     'use_batchnorm': args.wavegan_batchnorm,
-    'upsample': args.wavegan_genr_upsample
+    'upsample': args.wavegan_genr_upsample,
+    'pp_filt': args.wavegan_genr_pp,
+    'pp_len': args.wavegan_genr_pp_len
   })
   setattr(args, 'wavegan_d_kwargs', {
     'kernel_len': args.wavegan_kernel_len,

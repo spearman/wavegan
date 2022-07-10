@@ -8,7 +8,9 @@ class Generator (tf.keras.Model):
     kernel_len=25,
     dim=64,
     use_batchnorm=False,
-    upsample='zeros'):
+    upsample='zeros',
+    pp_filt=False,
+    pp_len=512):
     super().__init__()
     assert slice_len in [16384, 32768, 65536]
     # in the conversion to TF2, we are only supporting zeros for now
@@ -75,6 +77,12 @@ class Generator (tf.keras.Model):
       self.relu_4 = tf.keras.layers.ReLU()
       self.upconv_5 = tf.keras.layers.Conv1DTranspose (nch, kernel_len, 4,
         padding='same', activation='tanh')
+
+    if pp_filt:
+      self.pp_filt = tf.keras.layers.Conv1D (1, pp_len, use_bias=False,
+        padding='same')
+    else:
+      self.pp_filt = None
 
   def call (self, z, train):
     dim_mul = self.dim_mul
@@ -157,6 +165,9 @@ class Generator (tf.keras.Model):
       # [16384, 64] -> [65536, nch]
       output = self.upconv_5 (output)
       output = tf.nn.tanh(output)
+
+    if self.pp_filt:
+      output = self.pp_filt(output)
 
     return output
 
