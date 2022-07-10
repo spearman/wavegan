@@ -146,7 +146,7 @@ def train(fps, args):
     generated_flat_int16 = float_to_int16 (generated_flat)
     preview_fp = os.path.join (preview_dir,
       "{}.wav".format (str (step).zfill (8)))
-    wavwrite (preview_fp, args.data_sample_rate, generated_flat_int16)
+    wavwrite (preview_fp, args.data_sample_rate, np.array (generated_flat_int16))
 
   epoch = 0
   while True:
