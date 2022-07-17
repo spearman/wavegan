@@ -2,9 +2,9 @@
 
 set -x
 
-#python train_wavegan.py train ./train \
+#python3 train_wavegan.py train ./train \
 #  --wavegan_loss wgan \
-python train.py train ./train \
+python3 train.py train ./train \
   --wavegan_genr_pp \
   --data_dir ./data/drums/train \
   --data_first_slice \
