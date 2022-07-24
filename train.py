@@ -147,6 +147,29 @@ def train(fps, args):
       "{}.wav".format (str (step).zfill (8)))
     wavwrite (preview_fp, args.data_sample_rate, np.array (generated_flat_int16))
 
+  checkpoint_d = tf.train.Checkpoint (step=tf.Variable(1), optimizer=D_opt,
+    net=discriminator, iterator=train_dataset)
+  checkpoint_g = tf.train.Checkpoint (step=tf.Variable(1), optimizer=G_opt,
+    net=generator, iterator=train_dataset)
+  checkpoint_dir = os.path.join (args.train_dir, "checkpoints")
+  manager_d = tf.train.CheckpointManager (checkpoint_d, checkpoint_dir,
+    max_to_keep=3)
+  manager_g = tf.train.CheckpointManager (checkpoint_g, checkpoint_dir,
+    max_to_keep=3)
+
+  checkpoint_d.restore (manager_d.latest_checkpoint)
+  checkpoint_g.restore (manager_g.latest_checkpoint)
+  if manager_d.latest_checkpoint:
+    print ("Restored discriminator from {}".format (
+      manager_d.latest_checkpoint))
+  else:
+    print ("Initialized new discriminator")
+  if manager_g.latest_checkpoint:
+    print ("Restored generator from {}".format (
+      manager_g.latest_checkpoint))
+  else:
+    print ("Initialized new generator")
+
   epoch = 0
   while True:
     start = time.time()
@@ -167,6 +190,12 @@ def train(fps, args):
       disc_loss / (args.train_batch_size * args.wavegan_disc_nupdates)))
 
     epoch += 1
+
+    if epoch % 3 == 0:
+      save_d = manager_d.save()
+      save_g = manager_g.save()
+      print ("Saved checkpoints {} step {}, {} step {}".format (save_d,
+        int (checkpoint_d.step), save_g, int (checkpoint_g.step)))
 
     print ("Generating preview")
     preview (epoch)
