@@ -151,10 +151,11 @@ def train(fps, args):
     net=discriminator, iterator=train_dataset)
   checkpoint_g = tf.train.Checkpoint (step=tf.Variable(1), optimizer=G_opt,
     net=generator, iterator=train_dataset)
-  checkpoint_dir = os.path.join (args.train_dir, "checkpoints")
-  manager_d = tf.train.CheckpointManager (checkpoint_d, checkpoint_dir,
+  manager_d = tf.train.CheckpointManager (checkpoint_d,
+    os.path.join (args.train_dir, "checkpoints/discriminator"),
     max_to_keep=3)
-  manager_g = tf.train.CheckpointManager (checkpoint_g, checkpoint_dir,
+  manager_g = tf.train.CheckpointManager (checkpoint_g,
+    os.path.join (args.train_dir, "checkpoints/generator"),
     max_to_keep=3)
 
   checkpoint_d.restore (manager_d.latest_checkpoint)
@@ -190,6 +191,8 @@ def train(fps, args):
       disc_loss / (args.train_batch_size * args.wavegan_disc_nupdates)))
 
     epoch += 1
+    checkpoint_d.step.assign_add (1)
+    checkpoint_g.step.assign_add (1)
 
     if epoch % 3 == 0:
       save_d = manager_d.save()
